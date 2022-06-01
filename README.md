@@ -1,6 +1,10 @@
 # $ ls -g
 > A Linux Study Group that aims to go through the LFS (Linux From Scratch) to understand better all components of the Linux kernel environment.
 
+<p align="center">
+       <img src="https://raw.githubusercontent.com/LambdaGroup/ls-g/main/assets/README-images/lsg.png" width=500/>       
+</p>
+
 # Manifest
 
 [![asciicast](https://asciinema.org/a/0LuHj5Ei6f0lUBmS2WrXQ5GFc.svg)](https://asciinema.org/a/0LuHj5Ei6f0lUBmS2WrXQ5GFc)
