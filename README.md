@@ -2,7 +2,7 @@
 > A Linux Study Group that aims to go through the LFS (Linux From Scratch) book to understand better all components of the Linux kernel/system environment.
 
 <p align="center">
-       <img src="https://raw.githubusercontent.com/LambdaGroup/ls-g/main/assets/README-images/lsg.png" width=500/>
+       <img src="../assets/README-images/lsg.png" width=500/>
 </p>
 
 <!-- TODO: Será que precisa do vídeo? fica meio poluído... -->
@@ -136,3 +136,9 @@ Quick introduction to the Linux kernel. We wont spend much time here since most 
 <!-- Talvez seja melhor seguir a branch de dev... -->
 ### Going Through LFS!
 - [Linux From Scratch Book](https://www.linuxfromscratch.org/lfs/view/stable/).
+
+---
+
+<p align="center">
+       <img src="../assets/README-images/logo.png" width=50/>
+</p>
