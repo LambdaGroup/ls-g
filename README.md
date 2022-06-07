@@ -2,7 +2,7 @@
 > A Linux Study Group that aims to go through the LFS (Linux From Scratch) book to understand better all components of the Linux kernel/system environment.
 
 <p align="center">
-       <img src="../assets/README-images/lsg.png" width=500/>
+       <img src="assets/README-images/lsg.png" width=500/>
 </p>
 
 <!-- TODO: Será que precisa do vídeo? fica meio poluído... -->
@@ -140,5 +140,5 @@ Quick introduction to the Linux kernel. We wont spend much time here since most 
 ---
 
 <p align="center">
-       <img src="../assets/README-images/logo.png" width=50/>
+       <img src="assets/README-images/logo.png" width=50/>
 </p>
