@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+source "$(pwd)/utils/spinner.sh"
 
 # aux funcs
 usage() { echo "Usage: $0 [ -d DISK_IMG_PATH ] [-s DISKS_IMG_SIZE ] [ -r RAM ] [ -p ISO_PATH ]" 1>&2; exit 1; }
@@ -32,7 +34,7 @@ DISK_IMG_SIZE="30G"
 ISO_PATH="https://geo.mirror.pkgbuild.com/iso/2022.06.01/archlinux-x86_64.iso"
 RAM="512M"
 
-while getopts :d:s:r:p: o; do
+while getopts :d:s:r:p:h o; do
     case "${o}" in
         d)
           DISK_IMG_PATH=${OPTARG}
@@ -46,6 +48,9 @@ while getopts :d:s:r:p: o; do
         p)
           ISO_PATH=${OPTARG}
           ;;
+        h)
+          usage
+          ;;
         *)
           usage
           ;;
@@ -53,20 +58,28 @@ while getopts :d:s:r:p: o; do
 done
 shift $((OPTIND-1))
 
-echo $DISK_IMG_PATH
+start_spinner "Using disk image: $DISK_IMG_PATH"
+sleep 1
+stop_spinner $?
 
 # if the disk image not exits, create one
 if ! [ -f $DISK_IMG_PATH ]; then
-  echo "Creating virtual disk image"
-  qemu-img create -f raw $DISK_IMG_PATH $DISK_IMG_SIZE
-  echo "Virtual disk image created"
+  # echo "Creating virtual disk image"
+  start_spinner "Creating virtual disk image"
+  sleep 1
+  qemu-img create -f raw $DISK_IMG_PATH $DISK_IMG_SIZE >log/qemu-img.log
+  stop_spinner $?
 else
-  echo "Virtual disk image found"
+  start_spinner "Virtual disk image found"
+  sleep 1
+  stop_spinner $?
 fi
 
 
 # run the vm
-echo "Running system"
+# spinner $$ &
+start_spinner "Running system. Wait to qemu to launch"
+sleep 1
 qemu-system-x86_64 \
     --drive file="$DISK_IMG_PATH",format=raw\
     --enable-kvm\
@@ -75,5 +88,5 @@ qemu-system-x86_64 \
     -cpu host\
     -boot order=dc,menu=on\
     -m $RAM\
-    -cdrom "$ISO_PATH" 
-echo "Bye!"
+    -cdrom "$ISO_PATH" &
+stop_spinner $?
