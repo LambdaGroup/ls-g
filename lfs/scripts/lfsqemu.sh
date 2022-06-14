@@ -34,7 +34,7 @@ done
 DISK_IMG_PATH="$HOME/.config/lfs/arch-linux-vm.raw"
 DISK_IMG_SIZE="30G"
 ISO_PATH="https://geo.mirror.pkgbuild.com/iso/2022.06.01/archlinux-x86_64.iso"
-RAM="512M"
+RAM="4G"
 
 while getopts :d:s:r:p:h o; do
     case "${o}" in
@@ -69,7 +69,7 @@ if ! [ -f $DISK_IMG_PATH ]; then
   # echo "Creating virtual disk image"
   start_spinner "Creating virtual disk image"
   sleep 1
-  qemu-img create -f raw $DISK_IMG_PATH $DISK_IMG_SIZE
+  qemu-img create -f raw $DISK_IMG_PATH $DISK_IMG_SIZE>/dev/null
   stop_spinner $?
 else
   start_spinner "Virtual disk image found"
@@ -80,6 +80,10 @@ fi
 
 # run the vm
 # spinner $$ &
+start_spinner "Using iso $ISO_PATH"
+sleep 1
+stop_spinner $?
+
 start_spinner "Running system. Wait to qemu to launch"
 sleep 1
 qemu-system-x86_64 \
@@ -90,5 +94,5 @@ qemu-system-x86_64 \
     -cpu host\
     -boot order=dc,menu=on\
     -m $RAM\
-    -cdrom "$ISO_PATH" &
+    -cdrom "$ISO_PATH" 2>&1 >/var/tmp/arch-linux-vm.log &
 stop_spinner $?
