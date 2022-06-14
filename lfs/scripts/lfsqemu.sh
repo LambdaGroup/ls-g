@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/bash
 
 mkdir -p "$HOME/.config/lfs/"
 
@@ -61,19 +61,19 @@ done
 shift $((OPTIND-1))
 
 start_spinner "Using disk image: $DISK_IMG_PATH"
-sleep 1
+sleep 0.1
 stop_spinner $?
 
 # if the disk image not exits, create one
 if ! [ -f $DISK_IMG_PATH ]; then
   # echo "Creating virtual disk image"
   start_spinner "Creating virtual disk image"
-  sleep 1
+  sleep 0.1
   qemu-img create -f raw $DISK_IMG_PATH $DISK_IMG_SIZE>/dev/null
   stop_spinner $?
 else
   start_spinner "Virtual disk image found"
-  sleep 1
+  sleep 0.1
   stop_spinner $?
 fi
 
@@ -81,18 +81,17 @@ fi
 # run the vm
 # spinner $$ &
 start_spinner "Using iso $ISO_PATH"
-sleep 1
+sleep 0.1
 stop_spinner $?
 
 start_spinner "Running system. Wait to qemu to launch"
-sleep 1
+sleep 0.1
 qemu-system-x86_64 \
-    --drive file="$DISK_IMG_PATH",format=raw\
+    --drive file=$DISK_IMG_PATH,format=raw\
     --enable-kvm\
     -machine q35\
     -device intel-iommu\
     -cpu host\
-    -boot order=dc,menu=on\
     -m $RAM\
     -cdrom "$ISO_PATH" 2>&1 >/var/tmp/arch-linux-vm.log &
 stop_spinner $?
