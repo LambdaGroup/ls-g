@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+mkdir -p "$HOME/.config/lfs/"
+
 source "$(pwd)/utils/spinner.sh"
 
 # aux funcs
@@ -29,7 +31,7 @@ for i in "qemu-img" "qemu-system-x86_64" ; do
 done
 
 # default values
-DISK_IMG_PATH="arch_vm.raw"
+DISK_IMG_PATH="$HOME/.config/lfs/arch-linux-vm.raw"
 DISK_IMG_SIZE="30G"
 ISO_PATH="https://geo.mirror.pkgbuild.com/iso/2022.06.01/archlinux-x86_64.iso"
 RAM="512M"
@@ -67,7 +69,7 @@ if ! [ -f $DISK_IMG_PATH ]; then
   # echo "Creating virtual disk image"
   start_spinner "Creating virtual disk image"
   sleep 1
-  qemu-img create -f raw $DISK_IMG_PATH $DISK_IMG_SIZE >log/qemu-img.log
+  qemu-img create -f raw $DISK_IMG_PATH $DISK_IMG_SIZE
   stop_spinner $?
 else
   start_spinner "Virtual disk image found"
