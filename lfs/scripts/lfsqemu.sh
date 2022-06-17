@@ -5,7 +5,7 @@ mkdir -p "$HOME/.config/lfs/"
 source "$(pwd)/utils/spinner.sh"
 
 # aux funcs
-usage() { echo "Usage: $0 [ -d DISK_IMG_PATH ] [-s DISKS_IMG_SIZE ] [ -r RAM ] [ -p ISO_PATH ]" 1>&2; exit 1; }
+usage() { echo "Usage: $0 [ -d DISK_IMG_PATH ] [-s DISKS_IMG_SIZE ] [ -r RAM ] [ -p ISO_PATH ] [ -l ]" 1>&2; exit 1; }
 
 command_exists() {
     # check if command exists and fail otherwise
@@ -36,26 +36,29 @@ DISK_IMG_SIZE="30G"
 ISO_PATH="https://geo.mirror.pkgbuild.com/iso/2022.06.01/archlinux-x86_64.iso"
 RAM="4G"
 
-while getopts :d:s:r:p:h o; do
+while getopts :d:s:r:p:hl o; do
     case "${o}" in
         d)
-          DISK_IMG_PATH=${OPTARG}
-          ;;
+            DISK_IMG_PATH=${OPTARG}
+            ;;
         s)
-          DISK_IMG_SIZE=${OPTARG}
-          ;;
+            DISK_IMG_SIZE=${OPTARG}
+            ;;
         r)
-          RAM=${OPTARG}
-          ;;
+            RAM=${OPTARG}
+            ;;
         p)
-          ISO_PATH=${OPTARG}
-          ;;
+            ISO_PATH=${OPTARG}
+            ;;
         h)
-          usage
-          ;;
+            usage
+            ;;
+        l)
+            BOOT_FROM_RAW=0
+            ;;
         *)
-          usage
-          ;;
+            usage
+            ;;
     esac
 done
 shift $((OPTIND-1))
@@ -77,21 +80,31 @@ else
   stop_spinner $?
 fi
 
-
 # run the vm
-# spinner $$ &
 start_spinner "Using iso $ISO_PATH"
 sleep 0.1
 stop_spinner $?
 
 start_spinner "Running system. Wait to qemu to launch"
 sleep 0.1
-qemu-system-x86_64 \
-    --drive file=$DISK_IMG_PATH,format=raw\
-    --enable-kvm\
-    -machine q35\
-    -device intel-iommu\
-    -cpu host\
-    -m $RAM\
-    -cdrom "$ISO_PATH" 2>&1 >/var/tmp/arch-linux-vm.log &
+if [ -z $BOOT_FROM_DISK ]; then
+    qemu-system-x86_64 \
+        --drive file=$DISK_IMG_PATH,format=raw \
+        --enable-kvm \
+        -machine q35 \
+        -device intel-iommu \
+        -cpu host \
+        -m $RAM \
+        -smp $(($(nproc) / 2)),sockets=1,cores=$(($(nproc) / 2)) 2>&1 >/var/tmp/arch-linux-vm.log &
+else
+    qemu-system-x86_64 \
+        --drive file=$DISK_IMG_PATH,format=raw \
+        --enable-kvm \
+        -machine q35 \
+        -device intel-iommu \
+        -cpu host \
+        -m $RAM \
+        -smp $(($(nproc) / 2)),sockets=1,cores=$(($(nproc) / 2)) \
+        -cdrom "$ISO_PATH" 2>&1 >/var/tmp/arch-linux-vm.log &
+fi
 stop_spinner $?
