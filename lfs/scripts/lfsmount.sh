@@ -7,7 +7,7 @@ LFS_CONFIG_FILE="$HOME/.config/lfs/.lfs_config"
 DIALOG_CANCEL=1
 DIALOG_ESC=255
 
-check_dialog () {
+check_answer () {
     case $? in
         "$DIALOG_CANCEL")
             echo "Canceled..." && exit
@@ -30,24 +30,24 @@ command_exists() {
 read_config () {
     DEVS=($(tail -n +2 <(lsblk -plo NAME)))
 
-    CMD=(dialog --keep-tite --backtitle "LFS mount" --title "LFS directory" --inputbox "" 6 80 "/mnt/lfs")
+    CMD=(whiptail --backtitle "LFS mount" --title "LFS directory" --inputbox "" 6 80 "/mnt/lfs")
     LFS=$("${CMD[@]}" 2>&1 >/dev/tty)
 
-    check_dialog
+    check_answer
     if ! [[ -d $LFS ]]; then
         echo "$LFS does not exist..."
         exit 1
     fi
 
-    CMD=(dialog --keep-tite --title "LFS root mount point" --menu "" 40 80 16)
+    CMD=(whiptail --title "LFS root mount point" --menu "" 40 80 16)
     OPT=($(for i in "${!DEVS[@]}"; do echo "$i ${DEVS[$i]}"; done))
     LFS_ROOT=$("${CMD[@]}" "${OPT[@]}" 2>&1 >/dev/tty)
-    check_dialog
+    check_answer
 
-    CMD=(dialog --keep-tite --title "LFS boot mount point" --menu "" 40 80 16)
+    CMD=(whiptail --title "LFS boot mount point" --menu "" 40 80 16)
     OPT=($(for i in "${!DEVS[@]}"; do [ "$LFS_ROOT" != "$i" ] && echo "$i ${DEVS[$i]}"; done))
     LFS_BOOT=$("${CMD[@]}" "${OPT[@]}" 2>&1 >/dev/tty)
-    check_dialog
+    check_answer
 }
 
 save_config () {
@@ -73,7 +73,7 @@ check_mountpoint(){
     fi
 }
 
-command_exists "dialog"
+command_exists "whiptail"
 
 if [ -f $LFS_CONFIG_FILE ]; then
     echo "Loading config from $LFS_CONFIG_FILE"
@@ -83,8 +83,9 @@ else
     save_config
 fi
 
-CMD=(dialog --keep-tite --title "Config done!" --yesno "chroot into LFS?" 20 30)
+CMD=(whiptail --title "Config done!" --yesno "chroot into LFS?" 20 30)
 RET=$("${CMD[@]}" 2>&1 >/dev/tty)
+check_answer
 
 set -e
 
