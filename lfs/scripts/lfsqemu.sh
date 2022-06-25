@@ -69,15 +69,15 @@ stop_spinner $?
 
 # if the disk image not exits, create one
 if ! [ -f "$DISK_IMG_PATH" ]; then
-  # echo "Creating virtual disk image"
-  start_spinner "Creating virtual disk image"
-  sleep 0.1
-  qemu-img create -f raw "$DISK_IMG_PATH" "$DISK_IMG_SIZE">/dev/null
-  stop_spinner $?
+    # echo "Creating virtual disk image"
+    start_spinner "Creating virtual disk image"
+    sleep 0.1
+    qemu-img create -f raw "$DISK_IMG_PATH" "$DISK_IMG_SIZE">/dev/null
+    stop_spinner $?
 else
-  start_spinner "Virtual disk image found"
-  sleep 0.1
-  stop_spinner $?
+    start_spinner "Virtual disk image found"
+    sleep 0.1
+    stop_spinner $?
 fi
 
 PROCS="$(($(nproc) / 2))"
@@ -97,7 +97,7 @@ case "$BOOT_FROM" in
             -net nic \
             -net user,hostfwd=tcp:127.0.0.1:2222-:22 \
             -smp "$PROCS",sockets=1,cores="$PROCS" >/var/tmp/arch-linux-vm.log 2>&1 & \
-            ;;
+        ;;
 
     live )
         qemu-system-x86_64 \
@@ -108,9 +108,10 @@ case "$BOOT_FROM" in
             -cpu host \
             -m "$RAM" \
             -smp "$PROCS",sockets=1,cores="$PROCS" \
-            -cdrom "$ISO_PATH" >/var/tmp/arch-linux-vm.log 2>&1  & \
-            ;;
+            -cdrom "$ISO_PATH" >/var/tmp/arch-linux-vm.log 2>&1 & \
+        ;;
     * )
         usage
+        ;;
 esac
 stop_spinner $?
