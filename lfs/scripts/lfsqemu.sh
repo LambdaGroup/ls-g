@@ -5,7 +5,7 @@ mkdir -p "$HOME/.config/lfs/"
 source "$(pwd)/utils/spinner.sh"
 
 # aux funcs
-usage() { echo "Usage: $0 [ -d DISK_IMG_PATH ] [-s DISKS_IMG_SIZE ] [ -r RAM ] [ -p ISO_PATH ] [ -l ]" 1>&2; exit 1; }
+usage() { echo "Usage: $0 [ -d DISK_IMG_PATH ] [-s DISKS_IMG_SIZE ] [ -r RAM ] [ -p ISO_PATH ] [ -l <ssh | live> ]" 1>&2; exit 1; }
 
 command_exists() {
     # check if command exists and fail otherwise
@@ -36,7 +36,7 @@ DISK_IMG_SIZE="30G"
 ISO_PATH="https://geo.mirror.pkgbuild.com/iso/2022.06.01/archlinux-x86_64.iso"
 RAM="4G"
 
-while getopts :d:s:r:p:hl o; do
+while getopts :d:s:r:p:hl: o; do
     case "${o}" in
         d)
             DISK_IMG_PATH=${OPTARG}
@@ -54,7 +54,7 @@ while getopts :d:s:r:p:hl o; do
             usage
             ;;
         l)
-            BOOT_FROM_RAW=0
+            BOOT_FROM=${OPTARG}
             ;;
         *)
             usage
@@ -68,11 +68,11 @@ sleep 0.1
 stop_spinner $?
 
 # if the disk image not exits, create one
-if ! [ -f $DISK_IMG_PATH ]; then
+if ! [ -f "$DISK_IMG_PATH" ]; then
   # echo "Creating virtual disk image"
   start_spinner "Creating virtual disk image"
   sleep 0.1
-  qemu-img create -f raw $DISK_IMG_PATH $DISK_IMG_SIZE>/dev/null
+  qemu-img create -f raw "$DISK_IMG_PATH" "$DISK_IMG_SIZE">/dev/null
   stop_spinner $?
 else
   start_spinner "Virtual disk image found"
@@ -80,31 +80,37 @@ else
   stop_spinner $?
 fi
 
-# run the vm
-start_spinner "Using iso $ISO_PATH"
-sleep 0.1
-stop_spinner $?
+PROCS="$(($(nproc) / 2))"
 
 start_spinner "Running system. Wait to qemu to launch"
 sleep 0.1
-if [ -z $BOOT_FROM_DISK ]; then
-    qemu-system-x86_64 \
-        --drive file=$DISK_IMG_PATH,format=raw \
-        --enable-kvm \
-        -machine q35 \
-        -device intel-iommu \
-        -cpu host \
-        -m $RAM \
-        -smp $(($(nproc) / 2)),sockets=1,cores=$(($(nproc) / 2)) 2>&1 >/var/tmp/arch-linux-vm.log &
-else
-    qemu-system-x86_64 \
-        --drive file=$DISK_IMG_PATH,format=raw \
-        --enable-kvm \
-        -machine q35 \
-        -device intel-iommu \
-        -cpu host \
-        -m $RAM \
-        -smp $(($(nproc) / 2)),sockets=1,cores=$(($(nproc) / 2)) \
-        -cdrom "$ISO_PATH" 2>&1 >/var/tmp/arch-linux-vm.log &
-fi
+case "$BOOT_FROM" in
+    ssh )
+        qemu-system-x86_64 \
+            --drive file="$DISK_IMG_PATH",format=raw \
+            --enable-kvm \
+            -machine q35 \
+            -device intel-iommu \
+            -cpu host \
+            -m "$RAM" \
+            -nographic \
+            -net nic \
+            -net user,hostfwd=tcp:127.0.0.1:2222-:22 \
+            -smp "$PROCS",sockets=1,cores="$PROCS" >/var/tmp/arch-linux-vm.log 2>&1 & \
+            ;;
+
+    live )
+        qemu-system-x86_64 \
+            --drive file="$DISK_IMG_PATH",format=raw \
+            --enable-kvm \
+            -machine q35 \
+            -device intel-iommu \
+            -cpu host \
+            -m "$RAM" \
+            -smp "$PROCS",sockets=1,cores="$PROCS" \
+            -cdrom "$ISO_PATH" >/var/tmp/arch-linux-vm.log 2>&1  & \
+            ;;
+    * )
+        usage
+esac
 stop_spinner $?
