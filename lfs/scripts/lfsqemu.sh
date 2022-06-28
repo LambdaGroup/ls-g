@@ -1,7 +1,5 @@
 #!/usr/bin/bash
 
-mkdir -p "$HOME/.config/lfs/"
-
 #PRAGMA BLOAT
 
 # Bloat courtesy of Mr. Daniel
@@ -90,8 +88,8 @@ usage() {
 	echo -e "Usage: \n\n$0 \n\
     [ -d ARCH_ARCH_DISK_IMG_PATH ]\n\
     [ -o LFS_ARCH_DISK_IMG_PATH ]\n\
-    [-s ARCH_DISKS_IMG_SIZE ]\n\
-    [-f LFS_DISKS_IMG_SIZE ]\n\
+    [ -s ARCH_DISKS_IMG_SIZE ]\n\
+    [ -f LFS_DISKS_IMG_SIZE ]\n\
     [ -r RAM ]\n\
     [ -c CORES ]\n\
     [ -p ISO_PATH ]\n\
@@ -101,9 +99,7 @@ usage() {
 }
 
 command_exists() {
-	# check if command exists and fail otherwise
-	command -v "$1" >/dev/null 2>&1
-	if [[ $? -ne 0 ]]; then
+	if ! command -v "$1" >/dev/null 2>&1 ; then
 		echo "I require the command $1 but it's not installed. Abort."
 		exit 1
 	fi
@@ -118,10 +114,13 @@ file_exists() {
 	fi
 }
 
+
 # depts
 for i in "qemu-img" "qemu-system-x86_64"; do
 	command_exists "$i"
 done
+
+mkdir -p "$HOME/.config/lfs/"
 
 # default values
 ARCH_DISK_IMG_PATH="$HOME/.config/lfs/arch-linux-vm.raw"
@@ -196,7 +195,7 @@ fi
 start_spinner "Running system. Wait to qemu to launch"
 # sleep 0.1
 case "$BOOT_FROM" in
-ssh)
+    ssh)
 	qemu-system-x86_64 \
 		--drive file="$ARCH_DISK_IMG_PATH",format=raw,media=disk \
 		--drive file="$LFS_DISK_IMG_PATH",format=raw,media=disk --enable-kvm \
@@ -210,7 +209,7 @@ ssh)
 		-smp "$CORES",sockets=1,cores="$CORES" >/var/tmp/arch-linux-vm.log 2>&1 &
 	;;
 
-live)
+    live)
 	qemu-system-x86_64 \
 		--drive file="$ARCH_DISK_IMG_PATH",format=raw \
 		--drive file="$LFS_DISK_IMG_PATH",format=raw \
@@ -222,7 +221,7 @@ live)
 		-smp "$CORES",sockets=1,cores="$CORES" \
 		-cdrom "$ISO_PATH" >/var/tmp/arch-linux-vm.log 2>&1 &
 	;;
-*)
+    *)
 	stop_spinner $?
 	usage
 	;;
