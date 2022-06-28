@@ -7,13 +7,13 @@ LFS_CONFIG_FILE="$HOME/.config/lfs/.lfs_config"
 DIALOG_CANCEL=1
 DIALOG_ESC=255
 
-check_answer () {
+check_answer() {
     case $? in
-        "$DIALOG_CANCEL")
-            echo "Canceled..." && exit
+    "$DIALOG_CANCEL")
+        echo "Canceled..." && exit
         ;;
-        "$DIALOG_ESC")
-            echo "Canceled..." && exit
+    "$DIALOG_ESC")
+        echo "Canceled..." && exit
         ;;
     esac
 }
@@ -21,13 +21,13 @@ check_answer () {
 command_exists() {
     # check if command exists and fail otherwise
     command -v "$1" >/dev/null 2>&1
-    if [[ $? -ne 0  ]]; then
+    if [[ $? -ne 0 ]]; then
         echo "I require the command $1 but it's not installed. Abort."
         exit 1
     fi
 }
 
-read_config () {
+read_config() {
     DEVS=($(tail -n +2 <(lsblk -plo NAME)))
 
     CMD=(whiptail --backtitle "LFS mount" --title "LFS directory" --inputbox "" 6 80 "/mnt/lfs")
@@ -50,21 +50,20 @@ read_config () {
     check_answer
 }
 
-save_config () {
+save_config() {
     echo "Saving to $LFS_CONFIG_FILE"
     LFS_ROOT=${DEVS[$LFS_ROOT]}
     LFS_BOOT=${DEVS[$LFS_BOOT]}
-    echo -e "LFS=$LFS\nLFS_ROOT=$LFS_ROOT\nLFS_BOOT=$LFS_BOOT" > $LFS_CONFIG_FILE
+    echo -e "LFS=$LFS\nLFS_ROOT=$LFS_ROOT\nLFS_BOOT=$LFS_BOOT" >$LFS_CONFIG_FILE
 }
 
-do_chroot () {
+do_chroot() {
     echo 'chroot into LFS'
     [[ -z $RET ]] && bash lfschroot.sh
 }
 
-check_mountpoint(){
-    if  mountpoint -q "$1"
-    then
+check_mountpoint() {
+    if mountpoint -q "$1"; then
         echo "$1"' is mounted'
         # NOTE: don't use the return value, using set -e
         MOUNTED=0
