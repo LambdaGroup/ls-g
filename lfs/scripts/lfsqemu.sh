@@ -132,8 +132,8 @@ confirm() {
 kill_qemu() {
     # kill qemu if it's running
     if [[ -n $(pidof qemu-system-x86_64) ]]; then
-        start_spinner "Killing qemu...  "
-        sleep 1
+        start_spinner "Killing qemu-system-x86_64..."
+        sleep 0.1
         kill "$(pidof qemu-system-x86_64)"
         stop_spinner $?
     fi
@@ -234,7 +234,7 @@ ssh)
         -nographic \
         -net nic \
         -net user,hostfwd=tcp:127.0.0.1:2222-:22 \
-        -smp "$CORES",sockets=1,cores="$CORES" >/var/tmp/arch-linux-vm.log 2>&1 &
+        -smp "$CORES",sockets=1,cores="$CORES" >/var/tmp/arch-linux-vm.log 2>&1 & R=$!
     ;;
 
 live)
@@ -247,23 +247,45 @@ live)
         -cpu host \
         -m "$RAM" \
         -smp "$CORES",sockets=1,cores="$CORES" \
-        -cdrom "$ISO_PATH" >/var/tmp/arch-linux-vm.log 2>&1 &
+        -cdrom "$ISO_PATH" >/var/tmp/arch-linux-vm.log 2>&1 & R=$!
     ;;
 *)
-    stop_spinner $?
+    sleep 0.1
+    stop_spinner 1
     usage
     ;;
 esac
-R="$?"
 # wait for the VM to boot
 sleep 10
+# this is kinda hacky and unreliable, we wait for 10 secs and if the VM is up this means that things are probably
+# working, but, there is no way of knowing if shit didn't hit the fan...
+ps $R 1>/dev/null 2>&1
+R=$?
 stop_spinner "$R"
 
-# If it was successfull and the VM is running, prompt the user that the ssh is already running and
+# If it was successful and the VM is running, prompt the user that the ssh is already running and
 # ask if he wants to connect to the VM
-if [[ "$R" == "0" ]]; then
-    # Clean the terminal
-    clear
-    printf "省 The VM ( ) is running.\n"
+if [[ "$R" == "0" ]] && [[ "$BOOT_FROM" = "ssh" ]]; then
+    echo -e '\033[?1049h'
+    echo -e '\033[3J'
+
+    echo '
+    [1;30m        #####
+    [1;30m       #######
+    [1;30m       ##[37mO[1;30m#[37mO[1;30m##
+    [1;30m       #[33m#####[1;30m#
+    [1;30m     ##[37m##[33m###[37m##[1;30m##
+    [1;30m    #[37m##########[1;30m##
+    [1;30m   #[37m############[1;30m##
+    [1;30m   #[37m############[1;30m###
+    [33m  ##[1;30m#[37m###########[1;30m##[33m#
+    [33m######[1;30m#[37m#######[1;30m#[33m######
+    [33m#######[1;30m#[37m#####[1;30m#[33m#######
+    [33m  #####[1;30m#######[33m#####[0m
+
+  ls-g :: Linux From Scratch
+'
     confirm "Do you want to connect to the VM? [y/N] " && ssh arch@localhost -p 2222
+
+    echo -e '\033[?1049l'
 fi
