@@ -86,6 +86,7 @@ function stop_spinner {
 # aux funcs
 usage() {
     echo -e "Usage: \n\n$0 \n\
+    [ -k ] Kills the qemu instance\n\
     [ -d ARCH_ARCH_DISK_IMG_PATH ]\n\
     [ -o LFS_ARCH_DISK_IMG_PATH ]\n\
     [ -s ARCH_DISKS_IMG_SIZE ]\n\
@@ -93,7 +94,8 @@ usage() {
     [ -r RAM ]\n\
     [ -c CORES ]\n\
     [ -p ISO_PATH ]\n\
-    [ -l <ssh | live> ]" \
+    [ -l <ssh | live> ]\n\
+    [ -h ] Display this help message" \
         1>&2
     exit 1
 }
@@ -114,6 +116,29 @@ file_exists() {
     fi
 }
 
+confirm() {
+    # call with a prompt string or use a default
+    read -r -p "${1:-Are you sure? [y/N]} " response
+    case $response in
+    [yY][eE][sS] | [yY])
+        true
+        ;;
+    *)
+        false
+        ;;
+    esac
+}
+
+kill_qemu() {
+    # kill qemu if it's running
+    if [[ -n $(pidof qemu-system-x86_64) ]]; then
+        start_spinner "Killing qemu...  "
+        sleep 1
+        kill "$(pidof qemu-system-x86_64)"
+        stop_spinner $?
+    fi
+}
+
 # depts
 for i in "qemu-img" "qemu-system-x86_64"; do
     command_exists "$i"
@@ -131,7 +156,7 @@ RAM="4G"
 CORES="$(($(nproc) / 2))"
 BOOT_FROM="live"
 
-while getopts :d:o:f:c:s:r:p:hl: o; do
+while getopts :d:o:f:c:s:r:p:hl:k o; do
     case "$o" in
     d)
         ARCH_DISK_IMG_PATH=$OPTARG
@@ -159,6 +184,10 @@ while getopts :d:o:f:c:s:r:p:hl: o; do
         ;;
     h)
         usage
+        ;;
+    k)
+        kill_qemu
+        exit 0
         ;;
     *)
         usage
@@ -229,3 +258,12 @@ R="$?"
 # wait for the VM to boot
 sleep 10
 stop_spinner "$R"
+
+# If it was successfull and the VM is running, prompt the user that the ssh is already running and
+# ask if he wants to connect to the VM
+if [[ "$R" == "0" ]]; then
+    # Clean the terminal
+    clear
+    printf "省 The VM ( ) is running.\n"
+    confirm "Do you want to connect to the VM? [y/N] " && ssh arch@localhost -p 2222
+fi
