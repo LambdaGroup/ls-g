@@ -234,7 +234,8 @@ ssh)
         -nographic \
         -net nic \
         -net user,hostfwd=tcp:127.0.0.1:2222-:22 \
-        -smp "$CORES",sockets=1,cores="$CORES" >/var/tmp/arch-linux-vm.log 2>&1 & R=$!
+        -smp "$CORES",sockets=1,cores="$CORES" >/var/tmp/arch-linux-vm.log 2>&1 &
+    R=$!
     ;;
 
 live)
@@ -247,7 +248,8 @@ live)
         -cpu host \
         -m "$RAM" \
         -smp "$CORES",sockets=1,cores="$CORES" \
-        -cdrom "$ISO_PATH" >/var/tmp/arch-linux-vm.log 2>&1 & R=$!
+        -cdrom "$ISO_PATH" >/var/tmp/arch-linux-vm.log 2>&1 &
+    R=$!
     ;;
 *)
     sleep 0.1
@@ -266,11 +268,8 @@ stop_spinner "$R"
 # If it was successful and the VM is running, prompt the user that the ssh is already running and
 # ask if he wants to connect to the VM
 if [[ "$R" == "0" ]] && [[ "$BOOT_FROM" = "ssh" ]]; then
-    echo -e '\033[?1049h'
-    echo -e '\033[3J'
-
-    echo '
-    [1;30m        #####
+    clear
+    echo '    [1;30m        #####
     [1;30m       #######
     [1;30m       ##[37mO[1;30m#[37mO[1;30m##
     [1;30m       #[33m#####[1;30m#
@@ -285,7 +284,11 @@ if [[ "$R" == "0" ]] && [[ "$BOOT_FROM" = "ssh" ]]; then
 
   ls-g :: Linux From Scratch
 '
-    confirm "Do you want to connect to the VM? [y/N] " && ssh arch@localhost -p 2222
-
-    echo -e '\033[?1049l'
+    if confirm "Do you want to connect to the VM? [y/N]"; then
+        ssh arch@localhost -p 2222
+    else
+        bold=$(tput bold)
+        reset=$(tput sgr0)
+        printf "You can still connect to the VM using %s.\nOr you can kill the VM with %s. See ya\n" "${bold}ssh arch@localhost -p 2222${reset}" "${bold}$0 -k${reset}"
+    fi
 fi
